@@ -1,0 +1,32 @@
+@hostname = http://localhost:3300
+
+
+
+### GET
+get {{hostname}}
+
+### GET Hello
+# @name getHello
+get {{hostname}}/show/hello
+
+### Show Hello value
+get {{hostname}}/show/{{getHello.response.body.$.hello}}
+
+### 
+get {{hostname}}/crm
+
+
+### get all blogs
+get {{hostname}}/blogs
+
+
+### Save new blog
+post {{hostname}}/blogs
+content-type: application/json
+
+{
+  "title": "Title1",
+  "author": "Author1",
+  "body": "body 1"
+}
+

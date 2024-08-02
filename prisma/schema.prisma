@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  // id            String          @id @default(cuid())
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  // Optional for WebAuthn support
+  Authenticator Authenticator[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  remark    String?
+  myApps    MyApp[]
+  Media     Media[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @id @map("_id")
+  userId               String  @db.ObjectId
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, credentialID])
+}
+
+model MyApp {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  remark    String?
+  userId    String   @db.ObjectId
+  medias    Media[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("my_apps")
+}
+
+model IconTag {
+  id    String        @id @default(auto()) @map("_id") @db.ObjectId
+  name  String        @unique
+  icons TagsOnIcons[]
+  // icons TagsOnIcons[]
+
+  @@map("icon_tags")
+}
+
+model Icon {
+  id       String        @id @default(auto()) @map("_id") @db.ObjectId
+  name     String        @unique
+  iconTags TagsOnIcons[]
+
+  @@map("icons")
+}
+
+model TagsOnIcons {
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  iconId String  @db.ObjectId
+  tagId  String  @db.ObjectId
+  icon   Icon    @relation(fields: [iconId], references: [id], onDelete: Cascade)
+  tag    IconTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([iconId, tagId])
+  @@map("tags_on_icons")
+}
+
+model Media {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  objectName String
+  public     Boolean  @default(false)
+  fileSize   Int
+  remark     String?
+  appId      String   @db.ObjectId
+  mediaType  String   @default("image")
+  fileName   String
+  createdBy  String   @db.ObjectId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+  app        MyApp    @relation(fields: [appId], references: [id], onDelete: Cascade)
+  owner      User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("medias")
+}

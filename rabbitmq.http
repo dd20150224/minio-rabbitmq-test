@@ -1,0 +1,15 @@
+@hostname = http://localhost:3300
+
+
+
+### publish queue
+post {{hostname}}/rabbit/publish
+Content-Type: application/json
+
+{
+  "message": "Hello World"
+}
+
+
+### Consume
+get {{hostname}}/rabbit/consume

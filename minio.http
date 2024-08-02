@@ -1,0 +1,39 @@
+@hostname = http://localhost:3300
+
+### Get presigned url
+# @name getPresignedUrl
+post {{hostname}}/minio/get-presigned-url
+Content-Type: application/json
+
+{
+  "key": "bbb.jpeg"
+}
+
+
+### Set variable: url
+@url = {{getPresignedUrl.response.body.url}}
+
+
+### upload file
+PUT {{url}}
+Content-Type: image/jpeg
+
+< ./dog.jpeg
+
+
+### list buckets
+GET {{hostname}}/minio/list-buckets
+Content-Type: application/json
+
+### create bucket
+POST {{hostname}}/minio/buckets
+Content-Type: application/json
+
+{
+  "name": "upload2"
+}
+
+### list files in upload bucket
+GET {{hostname}}/minio/list-files
+Content-Type: application/json
+
